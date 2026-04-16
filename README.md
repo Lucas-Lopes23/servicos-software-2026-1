@@ -1,80 +1,29 @@
-**Criando uma estrutura para upload de arquivos**
+# Análise de Imagens com IA e OCR
 
-Vamos criar uma estrutura com os seguintes componentes:
+Este projeto consiste em uma aplicação baseada em múltiplos serviços utilizando Docker, com um frontend em Gradio e dois backends desenvolvidos em FastAPI.
 
-    - Um container para um app gradio-visao que irá apresentar a interface para a seleção de um arquivo de imagem para upload
-    - Um container api-visao que será responsável por receber o nosso arquivo, reconhecer o seu conteúdo e armazená-lo em nosso serviço de armazenamento
-    - Um container api-armazenamento que irá salvar o arquivo em um volume compartilhado e gravar o registro em um banco de dados SQLite.
+## Funcionalidades
 
-Passo-a-passo
-Vamos criar uma pasta para cada container:
- - gradio-visao
- - api-visao
- - api-armazenamento
+- Upload de imagens pela interface web
+- Geração automática de descrição da imagem com IA
+- Extração de texto da imagem utilizando OCR
+- Armazenamento da imagem e dos dados em banco SQLite
 
-Os conteúdos serão desenvolvidos durante a aula e ficarão disponibilizados em nosso repositório github.
+## Inteligência Artificial
 
-**Gradio Visão**
-Dentro do primeiro container, iremos criar os seguintes arquivos:
+O sistema utiliza o modelo:
 
-- Dockerfile
-- app.py
-- requirements.txt
+- Salesforce/blip-image-captioning-base
 
-Utilizar o código disponível em servicos_software_p/gradio-visao como modelos destes arquivos.
+Esse modelo é responsável por gerar descrições automáticas das imagens (image captioning).
+A sáida do modelo se encontra em Inglês, com isso é usado também o deep_translator para a tradução ao Português.
 
-**API VISÃO**
+## Arquitetura
 
-Dentro do container api-visão, iremos criar os seguintes arquivos:
-- Dockerfile
-- main.py
-- requirements.txt
+A aplicação é dividida em três serviços:
 
-Utilizar o código disponível em servicos_software_p/api-visao como modelos destes arquivos.
+- **gradio-visao** → Interface do usuário
+- **api-visao** → Processamento da imagem (IA + OCR)
+- **api-armazenamento** → Persistência de dados (SQLite + volume Docker)
 
-**API ARMAZENAMENTO**
-
-- Dockerfile
-- main.py
-- requirements.txt
-
-**Alteração no arquivo compose.yaml para habilitar os novos containers**
-
-Devem ser acrescentadas as seguintes linhas no arquivo: 
-
-```xml
-  gradio-visao:
-    build:
-      context: gradio-visao
-      dockerfile: Dockerfile
-    ports:
-      - "7861:7861"
-    depends_on:
-      - api-visao
-
-  api-visao:
-    build:
-      context: api-visao
-      dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
-    depends_on:
-      - api-armazenamento
-
-api-armazenamento:
-  build:
-    context: api-armazenamento
-    dockerfile: Dockerfile
-  ports:
-    - "8082:8082"
-  volumes:
-    - dados-imagens:/dados
-
-volumes:
-  dados-imagens:
-
-```
-
-```sh
-docker compose up -d --build
-
+Os serviços se comunicam por meio de APIs REST.
